@@ -1,47 +1,11 @@
 import uvicorn
-from fastapi import FastAPI, Query, Body, Path
+from fastapi import FastAPI
 from fastapi.openapi.docs import get_swagger_ui_html
+from hotels import router as router_hotels
 
 app = FastAPI(docs_url=None)
 
-hotels = [
-    {"id": 1, "title": "Sochi", "name": "Laguna"},
-    {"id": 2, "title": "Дубай", "name": "Grand"},
-]
-
-
-@app.put("/hotels/{hotel_id}")
-def change_hotel_all_values(
-        hotel_id: int = Path(description="Айдишник отеля"),
-        title: str = Body(description="Новый title отеля"),
-        name: str = Body(description="Новое имя отеля")
-):
-    data = None
-    for hotel in hotels:
-        if hotel["id"] == hotel_id:
-            hotel["title"] = title
-            hotel["name"] = name
-            data = hotel
-
-        return {"message": "successfully changed!", "data": data}
-
-
-@app.patch("/hotels/{hotel_id}")
-def change_hotel_value(
-        hotel_id: int = Path(description="Айдишник отеля"),
-        title: str | None = Body(default=None, description="Новый title отеля"),
-        name: str | None = Body(default=None, description="Новое имя отеля")
-):
-    data = None
-    for hotel in hotels:
-        if hotel["id"] == hotel_id:
-            if title is not None:
-                hotel["title"] = title
-            if name is not None:
-                hotel["name"] = name
-            data = hotel
-
-    return {"message": "Successfully changed", "data": data}
+app.include_router(router_hotels, prefix="/hotels", tags=["Отели"])
 
 
 @app.get("/docs", include_in_schema=False)
