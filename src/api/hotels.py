@@ -1,13 +1,9 @@
-from typing import Annotated
-
-from repositories.base import BaseRepository
 from src.api.dependencies import PaginationDep
 from fastapi import APIRouter, Query, Body, HTTPException, status
 
-from src.models.hotels import HotelOrm
 from src.schemas.hotels import Hotel, HotelPatch
 from src.database import async_session_maker, engine
-from sqlalchemy import insert, select
+
 from repositories.hotels import HotelsRepository
 
 router = APIRouter()
@@ -28,6 +24,16 @@ async def get_hotels(
             limit=per_page,
             offset=(pagination.page - 1) * per_page
         )
+
+
+@router.get("/{hotel_id}")
+async def get_hotel_by_id(hotel_id: int):
+    async with async_session_maker() as session:
+        hotel = await HotelsRepository(session).get_by_id(id=hotel_id)
+        if hotel is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
+
+        return hotel
 
 
 @router.post("")
@@ -84,18 +90,12 @@ async def change_hotel_all_values(hotel_id: int, hotel_data: Hotel):
         return {"status": "OK"}
 
 
-# @router.patch("{hotel_id}", summary="частичное обновление даных об отеле")
-# def change_hotel_value(hotel_id: int, hotel_data: HotelPatch):
-#     data = None
-#     for hotel in hotels:
-#         if hotel["id"] == hotel_id:
-#             if hotel_data.title is not None:
-#                 hotel["title"] = hotel_data.title
-#             if hotel_data.name is not None:
-#                 hotel["name"] = hotel_data.name
-#             data = hotel
-#
-#     return {"message": "Successfully changed", "data": data}
+@router.patch("{hotel_id}", summary="частичное обновление даных об отеле")
+async def change_hotel_value(hotel_id: int, hotel_data: HotelPatch):
+    async with async_session_maker() as session:
+        await HotelsRepository(session).edit(data=hotel_data, exclude_unset=True, id=hotel_id)
+        await session.commit()
+        return {"message": "Successfully changed"}
 
 
 @router.delete("/{hotel_id}")
