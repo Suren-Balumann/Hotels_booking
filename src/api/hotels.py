@@ -1,6 +1,8 @@
 from typing import Annotated
+
+from repositories.base import BaseRepository
 from src.api.dependencies import PaginationDep
-from fastapi import APIRouter, Query, Body
+from fastapi import APIRouter, Query, Body, HTTPException, status
 
 from src.models.hotels import HotelOrm
 from src.schemas.hotels import Hotel, HotelPatch
@@ -61,7 +63,7 @@ async def create_hotel(hotel_data: Hotel = Body(openapi_examples={
 
 })):
     async with async_session_maker() as session:
-        hotel = await HotelsRepository(session).add(**hotel_data.model_dump())
+        hotel = await HotelsRepository(session).add(hotel_data)
 
         await session.commit()
 
@@ -69,30 +71,42 @@ async def create_hotel(hotel_data: Hotel = Body(openapi_examples={
 
 
 @router.put("/{hotel_id}")
-def change_hotel_all_values(hotel_id: int, hotel_data: Hotel):
-    hotel = [hotel for hotel in hotels if hotel["id"] == hotel_id][0]
-    hotel["title"] = hotel_data.title
-    hotel["name"] = hotel_data.name
+async def change_hotel_all_values(hotel_id: int, hotel_data: Hotel):
+    async with async_session_maker() as session:
+        hotel = await HotelsRepository(session).get_one_or_none(id=hotel_id)
+        if len(hotel) < 1:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
+        if len(hotel) > 1:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="More than one")
 
-    return {"message": "successfully changed!", "data": hotel}
+        await HotelsRepository(session).edit(data=hotel_data, id=hotel_id)
+        await session.commit()
+        return {"status": "OK"}
 
 
-@router.patch("{hotel_id}", summary="частичное обновление даных об отеле")
-def change_hotel_value(hotel_id: int, hotel_data: HotelPatch):
-    data = None
-    for hotel in hotels:
-        if hotel["id"] == hotel_id:
-            if hotel_data.title is not None:
-                hotel["title"] = hotel_data.title
-            if hotel_data.name is not None:
-                hotel["name"] = hotel_data.name
-            data = hotel
-
-    return {"message": "Successfully changed", "data": data}
+# @router.patch("{hotel_id}", summary="частичное обновление даных об отеле")
+# def change_hotel_value(hotel_id: int, hotel_data: HotelPatch):
+#     data = None
+#     for hotel in hotels:
+#         if hotel["id"] == hotel_id:
+#             if hotel_data.title is not None:
+#                 hotel["title"] = hotel_data.title
+#             if hotel_data.name is not None:
+#                 hotel["name"] = hotel_data.name
+#             data = hotel
+#
+#     return {"message": "Successfully changed", "data": data}
 
 
 @router.delete("/{hotel_id}")
-def delete_hotel(hotel_id: int):
-    global hotels
-    hotels = [hotel for hotel in hotels if hotel["id"] != hotel_id]
-    return {"status": "OK"}
+async def delete_hotel(hotel_id: int):
+    async with async_session_maker() as session:
+        hotel = await HotelsRepository(session).get_one_or_none(id=hotel_id)
+        if len(hotel) < 1:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
+        if len(hotel) > 1:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="More than one")
+
+        await HotelsRepository(session).delete(id=hotel_id)
+        await session.commit()
+        return {"status": "OK"}
