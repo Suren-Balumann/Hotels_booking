@@ -1,12 +1,12 @@
 from src.api.dependencies import PaginationDep
 from fastapi import APIRouter, Query, Body, HTTPException, status
 
-from src.schemas.hotels import Hotel, HotelPatch
-from src.database import async_session_maker, engine
+from src.schemas.hotels import HotelAdd, HotelPatch
+from src.database import async_session_maker
 
-from repositories.hotels import HotelsRepository
+from src.repositories.hotels import HotelsRepository
 
-router = APIRouter()
+router = APIRouter(prefix="/hotels", tags=["Отели"])
 
 
 @router.get("")
@@ -37,7 +37,7 @@ async def get_hotel_by_id(hotel_id: int):
 
 
 @router.post("")
-async def create_hotel(hotel_data: Hotel = Body(openapi_examples={
+async def create_hotel(hotel_data: HotelAdd = Body(openapi_examples={
     "1": {
         "summary": "Сочи",
         "value": {
@@ -77,7 +77,7 @@ async def create_hotel(hotel_data: Hotel = Body(openapi_examples={
 
 
 @router.put("/{hotel_id}")
-async def change_hotel_all_values(hotel_id: int, hotel_data: Hotel):
+async def change_hotel_all_values(hotel_id: int, hotel_data: HotelAdd):
     async with async_session_maker() as session:
         hotel = await HotelsRepository(session).get_one_or_none(id=hotel_id)
         if len(hotel) < 1:

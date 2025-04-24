@@ -1,11 +1,12 @@
 from sqlalchemy import select
-
-from repositories.base import BaseRepository
+from src.schemas.hotels import Hotel
+from src.repositories.base import BaseRepository
 from src.models.hotels import HotelOrm
 
 
 class HotelsRepository(BaseRepository):
     model = HotelOrm
+    schema = Hotel
 
     async def get_all(self, title, location, limit, offset):
 
@@ -24,10 +25,11 @@ class HotelsRepository(BaseRepository):
         # print(query.compile(bind=engine, compile_kwargs={"literal_binds": True}))
 
         result = await self.session.execute(query)
-
-        return result.scalars().all()
+        result = [self.schema.model_validate(hotel, from_attributes=True) for hotel in result.scalars().all()]
+        return result
 
     async def get_one_or_none(self, **filter_by):
         query = select(self.model).filter_by(**filter_by)
         result = await self.session.execute(query)
-        return result.scalars().all()
+        result = [self.schema.model_validate(hotel, from_attributes=True) for hotel in result.scalars().all()]
+        return result
