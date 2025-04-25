@@ -1,5 +1,6 @@
-from fastapi import APIRouter, Body, HTTPException, status, Response, Request
+from fastapi import APIRouter, Body, HTTPException, status, Response
 
+from src.api.dependencies import UserIdDep
 from src.schemas.users import UserRequestAdd, UserAdd
 from src.database import async_session_maker
 from src.repositories.user import UserRepository
@@ -88,15 +89,18 @@ async def login_user(
         return {"access_token": access_token}
 
 
-@router.get('/only_auth')
+@router.get('/me')
 async def only_auth(
-        request: Request,
+        user_id: UserIdDep
 ):
-    access_token = request.cookies.get("access_token")
-    if not access_token:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Пожалуйста авторизируйтесь")
+    async with async_session_maker() as session:
+        user = await UserRepository(session).get_by_id(id=user_id)
+        return user
 
-    return {
-        "status": "ok",
-        "token": access_token
-    }
+
+@router.post('/logout')
+async def logout_system(
+        response: Response
+):
+    response.delete_cookie("access_token")
+    return {"status": "OK"}

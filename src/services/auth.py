@@ -2,6 +2,7 @@ from passlib.context import CryptContext
 from datetime import datetime, timezone, timedelta
 import jwt
 from src.config import settings
+from fastapi import HTTPException, status
 
 
 class AuthService:
@@ -19,3 +20,11 @@ class AuthService:
 
     async def hash_password(self, password: str) -> str:
         return self.pwd_context.hash(password)
+
+    async def decode_token(self, token: str) -> dict:
+        try:
+            return jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
+        except jwt.exceptions.DecodeError:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Не верный токен")
+        except jwt.exceptions.ExpiredSignatureError:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Необхадимо авторизироваться")
