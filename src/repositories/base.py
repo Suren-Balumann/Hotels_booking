@@ -9,13 +9,15 @@ class BaseRepository:
     def __init__(self, session):
         self.session = session
 
-    async def get_all(self, *args, **kwargs):
-        query = select(self.model)
+    async def get_filter_by(self, **filter_by):
+        query = select(self.model).filter_by(**filter_by)
         # print(query.compile(bind=engine, compile_kwargs={"literal_binds": True}))
-
         result = await self.session.execute(query)
-        result = [self.schema.model_validate(hotel, from_attributes=True) for hotel in result.scalars().all()]
+        result = [self.schema.model_validate(room, from_attributes=True) for room in result.scalars().all()]
         return result
+
+    async def get_all(self, *args, **kwargs):
+        return await self.get_filter_by(**kwargs)
 
     async def get_by_id(self, id: int):
         query = select(self.model).filter_by(id=id)
