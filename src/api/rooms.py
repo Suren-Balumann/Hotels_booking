@@ -1,36 +1,36 @@
 from fastapi import APIRouter, Body, HTTPException, status
 from src.schemas.rooms import RoomAdd, RoomPatch
-from src.repositories.rooms import RoomsRepository
-from src.repositories.hotels import HotelsRepository
-from src.database import async_session_maker
+
+from src.api.dependencies import DBDep
 
 router = APIRouter(prefix="/hotels", tags=["Номера"])
 
 
 @router.get("/{hotel_id}/rooms")
 async def get_hotel_rooms(
-        hotel_id: int
+        hotel_id: int,
+        db: DBDep
 ):
-    async with async_session_maker() as session:
-        hotel = await HotelsRepository(session).get_by_id(id=hotel_id)
-        if not hotel:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Hotel not found")
-        return await RoomsRepository(session).get_all(hotel_id=hotel_id)
+    hotel = await db.hotels.get_by_id(id=hotel_id)
+    if not hotel:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Hotel not found")
+    return await db.rooms.get_all(hotel_id=hotel_id)
 
 
 @router.get('/room/{room_id}')
 async def get_room_by_id(
-        room_id: int
+        room_id: int,
+        db: DBDep
 ):
-    async with async_session_maker() as session:
-        room = await RoomsRepository(session).get_by_id(id=room_id)
-        if not room:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Room not found")
-        return {"status": "OK", "data": room}
+    room = await db.rooms.get_by_id(id=room_id)
+    if not room:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Room not found")
+    return {"status": "OK", "data": room}
 
 
 @router.post("/rooms")
 async def create_room(
+        db: DBDep,
         room_data: RoomAdd = Body(openapi_examples={
             "1": {
                 "summary": "Уютный",
@@ -73,21 +73,22 @@ async def create_room(
                 }
             }
         })
+
 ):
-    async with async_session_maker() as session:
-        hotel = await HotelsRepository(session).get_by_id(id=room_data.hotel_id)
-        if not hotel:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Hotel not found")
+    hotel = await db.hotels.get_by_id(id=room_data.hotel_id)
+    if not hotel:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Hotel not found")
 
-        room = await RoomsRepository(session).add(room_data)
+    room = await db.rooms.add(room_data)
 
-        await session.commit()
+    await db.commit()
 
-        return {"status": "OK", "data": room}
+    return {"status": "OK", "data": room}
 
 
 @router.put('/rooms/{room_id}')
 async def change_room_all_values(
+        db: DBDep,
         room_id: int,
         room_data: RoomAdd = Body(openapi_examples={
             "1": {
@@ -102,37 +103,36 @@ async def change_room_all_values(
             }
         })
 ):
-    async with async_session_maker() as session:
-        room = await RoomsRepository(session).get_by_id(id=room_id)
-        if not room:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Room not found")
+    room = await db.rooms.get_by_id(id=room_id)
+    if not room:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Room not found")
 
-        await RoomsRepository(session).edit(data=room_data, id=room_id)
+    await db.rooms.edit(data=room_data, id=room_id)
 
-        await session.commit()
+    await db.commit()
 
-        return {"status": "OK"}
+    return {"status": "OK"}
 
 
 @router.patch('/rooms/{room_id}', summary="Частичное обновление даных комнаты")
 async def change_room_value(
+        db: DBDep,
         room_id: int,
         room_data: RoomPatch,
 ):
-    async with async_session_maker() as session:
-        await RoomsRepository(session).edit(data=room_data, exclude_unset=True, id=room_id)
-        await session.commit()
-        return {"message": "Successfully changed"}
+    await db.rooms.edit(data=room_data, exclude_unset=True, id=room_id)
+    await db.commit()
+    return {"message": "Successfully changed"}
 
 
 @router.delete('/rooms/{room_id}')
 async def delete_room(
+        db: DBDep,
         room_id: int
 ):
-    async with async_session_maker() as session:
-        room = await RoomsRepository(session).get_one_or_none(id=room_id)
-        if not room:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Room not found")
-        await RoomsRepository(session).delete(id=room_id)
-        await session.commit()
-        return {"status": "OK"}
+    room = await db.rooms.get_one_or_none(id=room_id)
+    if not room:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Room not found")
+    await db.rooms.delete(id=room_id)
+    await db.commit()
+    return {"status": "OK"}
