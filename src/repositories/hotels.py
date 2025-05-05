@@ -1,4 +1,9 @@
+from datetime import date
 from sqlalchemy import select
+
+from src.database import engine
+from src.models.rooms import RoomOrm
+from src.repositories.utils import rooms_ids_for_booking
 from src.schemas.hotels import Hotel
 from src.repositories.base import BaseRepository
 from src.models.hotels import HotelOrm
@@ -8,9 +13,29 @@ class HotelsRepository(BaseRepository):
     model = HotelOrm
     schema = Hotel
 
-    async def get_all(self, title, location, limit, offset):
+    async def get_filtered_by_time(
+            self,
+            title: str,
+            location: str,
+            limit: int,
+            offset: int,
+            date_from: date,
+            date_to: date,
 
-        query = select(self.model)
+    ):
+        rooms_ids_to_get = rooms_ids_for_booking(date_from=date_from, date_to=date_to)
+
+        hotels_ids_to_get = (
+            select(RoomOrm.hotel_id)
+            .select_from(RoomOrm)
+            .filter(RoomOrm.id.in_(rooms_ids_to_get))
+        )
+        # print(hotels_ids_to_get.compile(bind=engine, compile_kwargs={"literal_binds": True}))
+
+        query = (
+            select(self.model)
+            .filter(HotelOrm.id.in_(hotels_ids_to_get))
+        )
 
         if title:
             query = query.filter(self.model.title.ilike(f'%{title}%'))
@@ -22,8 +47,6 @@ class HotelsRepository(BaseRepository):
                  .limit(limit)
                  .offset(offset)
                  )
-        # print(query.compile(bind=engine, compile_kwargs={"literal_binds": True}))
-
         result = await self.session.execute(query)
         result = [self.schema.model_validate(hotel, from_attributes=True) for hotel in result.scalars().all()]
         return result

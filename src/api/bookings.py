@@ -5,6 +5,21 @@ from src.schemas.bookings import BookingAdd, BookingAddRequest
 router = APIRouter(prefix="/bookings", tags=["Бронирование"])
 
 
+@router.get("")
+async def get_all_bookings(
+        db: DBDep
+):
+    return await db.booking.get_all()
+
+
+@router.get('/me')
+async def my_bookings(
+        user_id: UserIdDep,
+        db: DBDep
+):
+    return await db.booking.get_filter_by(user_id=user_id)
+
+
 @router.post("")
 async def reserve_room(
         user_id: UserIdDep,
@@ -21,18 +36,3 @@ async def reserve_room(
     booking = await db.booking.add(booking_data)
     await db.commit()
     return {"status": "OK", "data": booking}
-
-
-@router.get("")
-async def get_all_bookings(
-        db: DBDep
-):
-    return await db.booking.get_all()
-
-
-@router.get('/me')
-async def my_bookings(
-        user_id: UserIdDep,
-        db: DBDep
-):
-    return await db.booking.get_filter_by(user_id=user_id)
