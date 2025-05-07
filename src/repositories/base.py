@@ -1,5 +1,7 @@
 from pydantic import BaseModel
-from sqlalchemy import select, insert, update, delete
+from sqlalchemy import select, update, delete, insert
+
+from src.database import engine
 
 
 class BaseRepository:
@@ -48,6 +50,12 @@ class BaseRepository:
             return None
 
         return self.schema.model_validate(model, from_attributes=True)
+
+    async def add_bulk(self, data: list[BaseModel]):
+        query = insert(self.model).values([item.model_dump() for item in data])
+        # print(query.compile(bind=engine, compile_kwargs={"literal_binds": True}))
+
+        await self.session.execute(query)
 
     async def edit(self, data: BaseModel, exclude_unset: bool = False, **filter_by) -> None:
         update_stmt = (update(self.model)
