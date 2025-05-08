@@ -27,7 +27,7 @@ async def get_room_by_id(
         room_id: int,
         db: DBDep
 ):
-    room = await db.rooms.get_by_id(id=room_id)
+    room = await db.rooms.get_room_by_id_rels(id=room_id)
     if not room:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Room not found")
     return {"status": "OK", "data": room}
