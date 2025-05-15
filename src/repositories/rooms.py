@@ -3,6 +3,7 @@ from datetime import date
 from src.database import engine
 from src.repositories.base import BaseRepository
 from src.models.rooms import RoomOrm
+from src.repositories.mappers.mappers import RoomDataMapper
 from src.repositories.utils import rooms_ids_for_booking
 from src.schemas.rooms import Room, RoomWithRels
 from sqlalchemy import select
@@ -11,7 +12,7 @@ from sqlalchemy.orm import selectinload
 
 class RoomsRepository(BaseRepository):
     model = RoomOrm
-    schema = Room
+    mapper = RoomDataMapper
 
     async def get_all_by_time(
             self,

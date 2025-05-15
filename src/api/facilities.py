@@ -1,6 +1,8 @@
 from fastapi import APIRouter, Body
+from fastapi_cache.decorator import cache
 from src.api.dependencies import DBDep
 from src.schemas.facilities import FacilityAdd
+from src.utils.cache_decorator import my_own_cache
 
 router = APIRouter(prefix='/facilities', tags=["Удобства"])
 
@@ -35,18 +37,8 @@ async def add_facility(
 
 
 @router.get("")
+@my_own_cache(expire=10)
 async def get_all_facilities(
         db: DBDep
 ):
     return await db.facilities.get_all()
-
-
-# @router.get("/{room_id}")
-# async def get_rooms_facilities(
-#         room_id: int,
-#         db: DBDep
-# ):
-#     room_data = [3, 4]
-#     exists_facilities_ids = await db.rooms_facilities.get_ficilities_ids(room_id=room_id)
-#     data_facilities_ids = list(set(room_data + exists_facilities_ids))
-#     print(data_facilities_ids)

@@ -3,6 +3,7 @@ from sqlalchemy import select
 
 from src.database import engine
 from src.models.rooms import RoomOrm
+from src.repositories.mappers.mappers import HotelDataMapper
 from src.repositories.utils import rooms_ids_for_booking
 from src.schemas.hotels import Hotel
 from src.repositories.base import BaseRepository
@@ -11,7 +12,7 @@ from src.models.hotels import HotelOrm
 
 class HotelsRepository(BaseRepository):
     model = HotelOrm
-    schema = Hotel
+    mapper = HotelDataMapper
 
     async def get_filtered_by_time(
             self,
@@ -48,11 +49,11 @@ class HotelsRepository(BaseRepository):
                  .offset(offset)
                  )
         result = await self.session.execute(query)
-        result = [self.schema.model_validate(hotel, from_attributes=True) for hotel in result.scalars().all()]
+        result = [self.mapper.map_to_domain_entity(hotel) for hotel in result.scalars().all()]
         return result
 
     async def get_one_or_none(self, **filter_by):
         query = select(self.model).filter_by(**filter_by)
         result = await self.session.execute(query)
-        result = [self.schema.model_validate(hotel, from_attributes=True) for hotel in result.scalars().all()]
+        result = [self.mapper.map_to_domain_entity(hotel) for hotel in result.scalars().all()]
         return result

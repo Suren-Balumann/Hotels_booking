@@ -1,15 +1,14 @@
-from sqlalchemy import select, insert
-
-# from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy import select
 
 from src.repositories.base import BaseRepository
 from src.models.facilities import FacilitiesOrm, RoomsFacilitiesOrm
-from src.schemas.facilities import Facility, RoomFacility, RoomFacilityAdd
+from src.repositories.mappers.mappers import FacilityDataMapper
+from src.schemas.facilities import RoomFacility, RoomFacilityAdd
 
 
 class FacilitiesRepository(BaseRepository):
     model = FacilitiesOrm
-    schema = Facility
+    mapper = FacilityDataMapper
 
 
 class RoomsFacilitiesRepository(BaseRepository):

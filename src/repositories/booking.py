@@ -1,5 +1,6 @@
 from src.repositories.base import BaseRepository
 from src.models.bookings import BookingsOrm
+from src.repositories.mappers.mappers import BookingDataMapper
 from src.schemas.bookings import Booking
 from pydantic import BaseModel
 from sqlalchemy import insert
@@ -7,7 +8,7 @@ from sqlalchemy import insert
 
 class BookingRepository(BaseRepository):
     model = BookingsOrm
-    schema = Booking
+    mapper = BookingDataMapper
 
     # async def add(self, data: BaseModel):
     #
