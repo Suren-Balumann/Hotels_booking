@@ -11,6 +11,12 @@ from src.utils.db_manager import DBManager
 from src.database import async_session_maker_null_pool
 
 
+@pytest.fixture(scope="session")
+async def db() -> DBManager:
+    async with DBManager(session_factory=async_session_maker_null_pool) as db:
+        yield db
+
+
 @pytest.fixture(scope="session", autouse=True)
 async def setup_database():
     assert settings.MODE == "TEST"
@@ -19,27 +25,29 @@ async def setup_database():
         await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
 
+    with open("tests/mock_hotels.json", encoding="utf-8") as file:
+        hotels = [HotelAdd.model_validate(hotel) for hotel in json.load(file)]
 
-@pytest.fixture(scope="session", autouse=True)
-async def add_mocks_hotels_and_rooms(setup_database):
-    with open("tests/mock_hotels.json", "r") as file:
-        hotels = [HotelAdd(**hotel) for hotel in json.load(file)]
+    with open("tests/mock_rooms.json", encoding="utf-8") as file:
+        rooms = [RoomAdd.model_validate(room) for room in json.load(file)]
 
-    with open("tests/mock_rooms.json", "r") as file:
-        rooms = [RoomAdd(**room) for room in json.load(file)]
-
-    async with DBManager(session_factory=async_session_maker_null_pool) as db:
-        [await db.hotels.add(hotel) for hotel in hotels]
-        [await db.rooms.add(room) for room in rooms]
-        await db.commit()
+    async with DBManager(session_factory=async_session_maker_null_pool) as db_:
+        await db_.hotels.add_bulk(hotels)
+        await db_.rooms.add_bulk(rooms)
+        await db_.commit()
 
 
-@pytest.fixture(scope="session", autouse=True)
-async def add_user(add_mocks_hotels_and_rooms):
+@pytest.fixture(scope="session")
+async def ac() -> AsyncClient:
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
-        await ac.post(url="/auth/register", json={
-            "first_name": "Тестовый",
-            "last_name": "Тестовый",
-            "email": "Testoviy@mail.ru",
-            "password": "LongPassword12345"
-        })
+        yield ac
+
+
+@pytest.fixture(scope="session", autouse=True)
+async def add_user(ac, setup_database):
+    await ac.post(url="/auth/register", json={
+        "first_name": "Тестовый",
+        "last_name": "Тестовый",
+        "email": "Testoviy@mail.ru",
+        "password": "LongPassword12345"
+    })
