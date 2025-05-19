@@ -15,7 +15,8 @@ async def test_add_facility(ac):
 
     assert response.status_code == 200
     assert response.json() == answer
-    print(f"{response.json()}")
+    assert isinstance(response.json(), dict)
+    # print(f"{response.json()}")
 
 
 async def test_get_facilities(ac):
@@ -23,3 +24,4 @@ async def test_get_facilities(ac):
         "/facilities"
     )
     assert response.status_code == 200
+    assert isinstance(response.json(), list)

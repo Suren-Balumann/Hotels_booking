@@ -41,7 +41,7 @@ async def add_facility(
 
 
 @router.get("")
-# @my_own_cache(expire=10)
+@cache(expire=10)
 async def get_all_facilities(
         db: DBDep
 ):

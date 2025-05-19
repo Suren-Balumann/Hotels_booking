@@ -1,6 +1,15 @@
 import pytest
 import json
 from httpx import AsyncClient, ASGITransport
+from unittest import mock
+
+# def mocked_cache(*args, **kwargs):
+#     def wrapper(func):
+#         return func
+#
+#     return wrapper
+
+mock.patch("fastapi_cache.decorator.cache", lambda *args, **kwargs: lambda f: f).start()
 
 from src.api.dependencies import get_db
 from src.config import settings
@@ -62,3 +71,18 @@ async def add_user(ac, setup_database):
         "email": "Testoviy@mail.ru",
         "password": "LongPassword12345"
     })
+
+
+@pytest.fixture(scope="session", autouse=True)
+async def authenticated_ac(ac, add_user):
+    await ac.post(
+        "/auth/login",
+        json={
+            "first_name": "Тестовый",
+            "last_name": "Тестовый",
+            "email": "Testoviy@mail.ru",
+            "password": "LongPassword12345"
+        }
+    )
+    assert "access_token" in ac.cookies
+    yield ac
