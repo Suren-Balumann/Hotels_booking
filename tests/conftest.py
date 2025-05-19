@@ -1,6 +1,8 @@
 import pytest
 import json
 from httpx import AsyncClient, ASGITransport
+
+from src.api.dependencies import get_db
 from src.config import settings
 from src.database import engine_null_pool, Base
 from src.main import app
@@ -11,9 +13,18 @@ from src.utils.db_manager import DBManager
 from src.database import async_session_maker_null_pool
 
 
-@pytest.fixture(scope="session")
-async def db() -> DBManager:
+async def get_db_nool_pool() -> DBManager:
     async with DBManager(session_factory=async_session_maker_null_pool) as db:
+        # print("Я ПЕРЕЗАПИСАН")
+        yield db
+
+
+app.dependency_overrides[get_db] = get_db_nool_pool
+
+
+@pytest.fixture(scope="function")
+async def db() -> DBManager:
+    async for db in get_db_nool_pool():
         yield db
 
 

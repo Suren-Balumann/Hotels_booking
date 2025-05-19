@@ -32,16 +32,16 @@ async def add_facility(
             },
         })
 ):
-    # facility = await db.facilities.add(data=data)
-    # await db.commit()
+    facility = await db.facilities.add(data=data)
+    await db.commit()
 
-    test_task.apply_async(args=["Hello my pretty baby"], countdown=20)
+    # test_task.apply_async(args=["Hello my pretty baby"], countdown=20)
     # test_task.delay("Hello my pretty baby")
-    # return {"status": "OK", "data": facility}
+    return {"status": "OK", "data": facility}
 
 
 @router.get("")
-@my_own_cache(expire=10)
+# @my_own_cache(expire=10)
 async def get_all_facilities(
         db: DBDep
 ):
