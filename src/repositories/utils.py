@@ -57,3 +57,17 @@ def rooms_ids_for_booking(
     # print(rooms_ids_to_get.compile(bind=engine, compile_kwargs={"literal_binds": True}))
 
     return rooms_ids_to_get
+
+
+def is_there_free_rooms(
+        room_id: int
+):
+    free_rooms_count = (
+        select(RoomOrm.quantity - func.count(BookingsOrm.id).filter(BookingsOrm.room_id == room_id))
+        .select_from(RoomOrm)
+        .filter(RoomOrm.id == room_id)
+        .group_by(RoomOrm.quantity)
+        .outerjoin(BookingsOrm, RoomOrm.id == BookingsOrm.room_id)
+    )
+
+    return free_rooms_count
