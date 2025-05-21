@@ -31,9 +31,9 @@ async def reserve_room(
     if not room:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Room not found")
 
-    booking_data = BookingAdd(**booking_data.model_dump(), price=room.price, user_id=user_id)
+    _booking_data = BookingAdd(**booking_data.model_dump(), price=room.price, user_id=user_id)
 
     # booking = await db.booking.add(booking_data)
-    booking = await db.booking.add_booking(booking_data)
+    booking = await db.booking.add_booking(_booking_data,hotel_id=booking_data.hotel_id)
     await db.commit()
     return {"status": "OK", "data": booking}

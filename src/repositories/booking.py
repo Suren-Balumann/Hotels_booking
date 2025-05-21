@@ -9,7 +9,8 @@ from src.repositories.mappers.mappers import BookingDataMapper
 from sqlalchemy import select
 from fastapi import HTTPException, status
 
-from src.repositories.utils import is_there_free_rooms
+from src.repositories.utils import rooms_ids_for_booking
+from src.schemas.bookings import BookingAdd
 
 
 class BookingRepository(BaseRepository):
@@ -26,16 +27,20 @@ class BookingRepository(BaseRepository):
 
     async def add_booking(
             self,
-            data: BaseModel
+            data: BookingAdd,
+            hotel_id: int
     ):
-        query = is_there_free_rooms(room_id=data.room_id)
-        print(query.compile(bind=engine, compile_kwargs={"literal_binds": True}))
+        rooms_ids_to_get = rooms_ids_for_booking(
+            hotel_id=hotel_id,
+            date_from=data.date_from,
+            date_to=data.date_to
+        )
+        rooms_ids_to_book_res = await self.session.execute(rooms_ids_to_get)
+        rooms_ids_to_book: list[int] = rooms_ids_to_book_res.scalars().all()
 
-        result = await self.session.execute(query)
-        free_rooms_count = result.scalars().one_or_none()
-        print(f"{free_rooms_count=}")
-
-        if free_rooms_count == 0:
-            raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Все номера заняты")
-
-        return await self.add(data)
+        if data.room_id in rooms_ids_to_book:
+            # print(f"{data=}")
+            new_booking = await self.add(data)
+            return new_booking
+        else:
+            raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Not free places")
