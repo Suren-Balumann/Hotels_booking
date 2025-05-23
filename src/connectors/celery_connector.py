@@ -9,7 +9,7 @@ celery_app = Celery(
     broker=settings.REDIS_URL,
     include=[
         "src.tasks.tasks",
-    ]
+    ],
 )
 # celery_app.conf.broker_transport_options = {'visibility_timeout': 43200}
 

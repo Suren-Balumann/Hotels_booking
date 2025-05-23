@@ -1,5 +1,3 @@
-import pytest
-
 from src.services.auth import AuthService
 
 

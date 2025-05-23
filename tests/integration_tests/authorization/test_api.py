@@ -6,31 +6,30 @@ import pytest
     "model",
     [
         (
-                {
-                    "first_name": "Это второй",
-                    "last_name": "Test",
-                    "email": "SaintPiter@mail.ru",
-                    "password": "LongPassword12345"
-                }
+            {
+                "first_name": "Это второй",
+                "last_name": "Test",
+                "email": "SaintPiter@mail.ru",
+                "password": "LongPassword12345",
+            }
         ),
         (
-                {
-                    "first_name": "Это второй",
-                    "last_name": "Test",
-                    "email": "SaintPiter@mail.ru",
-                    "password": "LongPassword12345"
-                }
+            {
+                "first_name": "Это второй",
+                "last_name": "Test",
+                "email": "SaintPiter@mail.ru",
+                "password": "LongPassword12345",
+            }
         ),
         (
-                {
-                    "first_name": "Это второй",
-                    "last_name": "Test",
-                    "email": "SaintPiter@mail.ru",
-                    "password": "WrongPassword12345"
-                }
+            {
+                "first_name": "Это второй",
+                "last_name": "Test",
+                "email": "SaintPiter@mail.ru",
+                "password": "WrongPassword12345",
+            }
         ),
-
-    ]
+    ],
 )
 async def test_auth_flow(model, ac):
     response = await ac.post(url="/auth/register", json=model)
@@ -41,10 +40,7 @@ async def test_auth_flow(model, ac):
     if response.status_code == 405:
         assert response.json() == {"detail": "Already exists"}
 
-    response = await ac.post(
-        "/auth/login",
-        json=model
-    )
+    response = await ac.post("/auth/login", json=model)
     if response.status_code == 200:
         assert "access_token" in ac.cookies
 

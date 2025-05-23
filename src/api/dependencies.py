@@ -1,3 +1,5 @@
+from datetime import date
+
 from fastapi import Depends, Query, HTTPException, status, Request
 from pydantic import BaseModel
 from typing import Annotated
@@ -18,7 +20,10 @@ PaginationDep = Annotated[PaginationParams, Depends()]
 async def get_token(request: Request) -> str:
     token = request.cookies.get("access_token")
     if not token:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Вы не предоставили токен доступа")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Вы не предоставили токен доступа",
+        )
     return token
 
 
@@ -41,3 +46,20 @@ async def get_db():
 
 
 DBDep = Annotated[DBManager, Depends(get_db)]
+
+
+class FindDatesParams(BaseModel):
+    date_from: Annotated[date, Query(example="2025-05-01")]
+    date_to: Annotated[date, Query(example="2025-05-04")]
+
+
+async def validate_dates(dates_params: FindDatesParams = Depends()) -> FindDatesParams:
+    if dates_params.date_from > dates_params.date_to:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                            detail="Дата заезда не может быть позже даты выезда")
+
+    else:
+        return dates_params
+
+
+DatesDep = Annotated[FindDatesParams, Depends(validate_dates)]

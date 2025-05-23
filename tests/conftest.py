@@ -1,3 +1,4 @@
+# ruff : noqa : E402
 import pytest
 import json
 from httpx import AsyncClient, ASGITransport
@@ -15,7 +16,7 @@ from src.api.dependencies import get_db
 from src.config import settings
 from src.database import engine_null_pool, Base
 from src.main import app
-from src.models import *
+from src.models import *  # noqa
 from src.schemas.hotels import HotelAdd
 from src.schemas.rooms import RoomAdd
 from src.utils.db_manager import DBManager
@@ -59,18 +60,23 @@ async def setup_database():
 
 @pytest.fixture(scope="session")
 async def ac() -> AsyncClient:
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as ac:
         yield ac
 
 
 @pytest.fixture(scope="session", autouse=True)
 async def add_user(ac, setup_database):
-    await ac.post(url="/auth/register", json={
-        "first_name": "Тестовый",
-        "last_name": "Тестовый",
-        "email": "Testoviy@mail.ru",
-        "password": "LongPassword12345"
-    })
+    await ac.post(
+        url="/auth/register",
+        json={
+            "first_name": "Тестовый",
+            "last_name": "Тестовый",
+            "email": "Testoviy@mail.ru",
+            "password": "LongPassword12345",
+        },
+    )
 
 
 @pytest.fixture(scope="session")
@@ -81,8 +87,8 @@ async def authenticated_ac(ac, add_user):
             "first_name": "Тестовый",
             "last_name": "Тестовый",
             "email": "Testoviy@mail.ru",
-            "password": "LongPassword12345"
-        }
+            "password": "LongPassword12345",
+        },
     )
     assert "access_token" in ac.cookies
     yield ac

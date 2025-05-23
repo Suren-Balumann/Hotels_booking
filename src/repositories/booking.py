@@ -1,8 +1,6 @@
 from datetime import date
 
-from pydantic import BaseModel
-
-from src.database import engine
+from src.exceptions import AllRoomsAreBookedException
 from src.repositories.base import BaseRepository
 from src.models.bookings import BookingsOrm
 from src.repositories.mappers.mappers import BookingDataMapper
@@ -18,22 +16,15 @@ class BookingRepository(BaseRepository):
     mapper = BookingDataMapper
 
     async def get_bookings_with_today_checkin(self):
-        query = (
-            select(BookingsOrm)
-            .filter(BookingsOrm.date_from == date.today())
-        )
+        query = select(BookingsOrm).filter(BookingsOrm.date_from == date.today())
         result = await self.session.execute(query)
-        return [self.mapper.map_to_domain_entity(model) for model in result.scalars().all()]
+        return [
+            self.mapper.map_to_domain_entity(model) for model in result.scalars().all()
+        ]
 
-    async def add_booking(
-            self,
-            data: BookingAdd,
-            hotel_id: int
-    ):
+    async def add_booking(self, data: BookingAdd, hotel_id: int):
         rooms_ids_to_get = rooms_ids_for_booking(
-            hotel_id=hotel_id,
-            date_from=data.date_from,
-            date_to=data.date_to
+            hotel_id=hotel_id, date_from=data.date_from, date_to=data.date_to
         )
         rooms_ids_to_book_res = await self.session.execute(rooms_ids_to_get)
         rooms_ids_to_book: list[int] = rooms_ids_to_book_res.scalars().all()
@@ -43,4 +34,4 @@ class BookingRepository(BaseRepository):
             new_booking = await self.add(data)
             return new_booking
         else:
-            raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Not free places")
+            raise AllRoomsAreBookedException

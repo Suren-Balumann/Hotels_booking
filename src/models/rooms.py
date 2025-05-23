@@ -1,6 +1,10 @@
+import typing
 from src.database import Base
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import ForeignKey
+
+if typing.TYPE_CHECKING:
+    from src.models.facilities import FacilitiesOrm
 
 
 class RoomOrm(Base):
@@ -14,6 +18,5 @@ class RoomOrm(Base):
     quantity: Mapped[int]
 
     facilities: Mapped[list["FacilitiesOrm"]] = relationship(
-        back_populates="rooms",
-        secondary="rooms_facilities"
+        back_populates="rooms", secondary="rooms_facilities"
     )

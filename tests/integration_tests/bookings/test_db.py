@@ -11,7 +11,7 @@ async def test_booking_crud(db):
         room_id=room.id,
         date_from=date(year=2025, month=4, day=15),
         date_to=date(year=2025, month=4, day=25),
-        price=room.price
+        price=room.price,
     )
     added_booking = await db.booking.add(booking_data)
 
@@ -28,7 +28,7 @@ async def test_booking_crud(db):
         room_id=room.id,
         date_from=date(year=2025, month=4, day=16),
         date_to=updated_date,
-        price=new_price
+        price=new_price,
     )
 
     await db.booking.edit(update_data_booking, id=booking.id)
