@@ -1,3 +1,4 @@
+import logging
 import asyncio
 import os
 import time
@@ -15,6 +16,7 @@ def test_task(example: str):
 
 @celery_app.task
 def resize_image(image_path: str):
+    logging.debug(f"Вызывается функция resize_image c {image_path=}")
     sizes = [1000, 500, 200]
     output_folder = "src/static/images"
 
@@ -34,16 +36,15 @@ def resize_image(image_path: str):
 
         img_resized.save(output_path)
 
-        print(
+        logging.info(
             f"Изображение сохранено в следующих размерах {size} в папке {output_folder}"
         )
 
 
 async def get_bookings_with_today_checkin_helper():
-    print("Асинхронная функция запустилась")
     async with DBManager(session_factory=async_session_maker_null_pool) as db:
         bookings = await db.booking.get_bookings_with_today_checkin()
-        print(f"{bookings=}")
+        logging.debug(f"{bookings=}")
 
 
 @celery_app.task(name="booking_today_checkin")

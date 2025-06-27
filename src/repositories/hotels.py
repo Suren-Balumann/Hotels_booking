@@ -45,4 +45,3 @@ class HotelsRepository(BaseRepository):
             self.mapper.map_to_domain_entity(hotel) for hotel in result.scalars().all()
         ]
         return result
-

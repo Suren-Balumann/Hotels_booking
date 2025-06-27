@@ -38,7 +38,7 @@ async def test_auth_flow(model, ac):
         assert response.json() == {"status": "OK"}
 
     if response.status_code == 405:
-        assert response.json() == {"detail": "Already exists"}
+        assert response.json() == {"detail": "Уже существует"}
 
     response = await ac.post("/auth/login", json=model)
     if response.status_code == 200:

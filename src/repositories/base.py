@@ -1,8 +1,13 @@
+import logging
 from pydantic import BaseModel
 from sqlalchemy import select, update, delete, insert
 from sqlalchemy.exc import NoResultFound, IntegrityError
 
-from src.exceptions import ObjectNotFoundException, ObjectAlreadyExists, FoKeyObjectCannotBeDeleted
+from asyncpg.exceptions import UniqueViolationError
+from src.exceptions import (
+    ObjectNotFoundException,
+    ObjectAlreadyExistsException,
+)
 from src.repositories.mappers.base import DataMapper
 
 
@@ -51,8 +56,16 @@ class BaseRepository:
             query = insert(self.model).values(**data.model_dump()).returning(self.model)
             result = await self.session.execute(query)
             model = result.scalars().one()
-        except IntegrityError:
-            raise ObjectAlreadyExists
+        except IntegrityError as ex:
+            logging.error(
+                f"Не удалось добавить данные в БД, входные данные {data},тип ошибки: {type(ex.orig.__cause__)}"
+            )
+            if isinstance(ex.orig.__cause__, UniqueViolationError):
+                raise ObjectAlreadyExistsException from ex
+            else:
+                logging.error(
+                    f"Незнакомая ошибка: Не удалось добавить данные в БД, входные данные {data},тип ошибки: {type(ex.orig.__cause__)}")
+                raise ex
 
         return self.mapper.map_to_domain_entity(model)
 
@@ -74,8 +87,5 @@ class BaseRepository:
         await self.session.execute(update_stmt)
 
     async def delete(self, **filter_by) -> None:
-        try:
-            delete_stmt = delete(self.model).filter_by(**filter_by)
-            await self.session.execute(delete_stmt)
-        except IntegrityError:
-            raise FoKeyObjectCannotBeDeleted
+        delete_stmt = delete(self.model).filter_by(**filter_by)
+        await self.session.execute(delete_stmt)

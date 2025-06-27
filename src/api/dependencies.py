@@ -5,6 +5,9 @@ from pydantic import BaseModel
 from typing import Annotated
 
 from src.database import async_session_maker
+from src.exceptions import IncorrectTokenException, \
+    IncorrectTokenHttpException, ExpiredTokenException, \
+    ExpiredTokenHttpException
 from src.services.auth import AuthService
 from src.utils.db_manager import DBManager
 
@@ -28,7 +31,13 @@ async def get_token(request: Request) -> str:
 
 
 async def get_current_user_id(token: str = Depends(get_token)) -> int:
-    data = await AuthService().decode_token(token)
+    try:
+        data = await AuthService().decode_token(token)
+    except IncorrectTokenException:
+        raise IncorrectTokenHttpException
+    except ExpiredTokenException:
+        raise ExpiredTokenHttpException
+
     user_id = data.get("user_id")
     return user_id
 
@@ -53,10 +62,13 @@ class FindDatesParams(BaseModel):
     date_to: Annotated[date, Query(example="2025-05-04")]
 
 
-async def validate_dates(dates_params: FindDatesParams = Depends()) -> FindDatesParams:
-    if dates_params.date_from > dates_params.date_to:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                            detail="Дата заезда не может быть позже даты выезда")
+async def validate_dates(
+        dates_params: FindDatesParams = Depends()) -> FindDatesParams:
+    if dates_params.date_from >= dates_params.date_to:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Дата заезда не может быть позже даты выезда",
+        )
 
     else:
         return dates_params
