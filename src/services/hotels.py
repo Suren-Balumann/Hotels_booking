@@ -4,13 +4,12 @@ from src.services.base import BaseService
 
 
 class HotelService(BaseService):
-
     async def get_filtered_by_time(
-            self,
-            pagination,
-            dates,
-            title: str | None,
-            location: str | None,
+        self,
+        pagination,
+        dates,
+        title: str | None,
+        location: str | None,
     ):
         per_page = pagination.per_page or 5
 
@@ -31,11 +30,7 @@ class HotelService(BaseService):
         await self.db.commit()
         return hotel
 
-    async def edit_hotel(
-            self,
-            hotel_id: int,
-            hotel_data: HotelAdd
-    ):
+    async def edit_hotel(self, hotel_id: int, hotel_data: HotelAdd):
         await self.db.hotels.edit(data=hotel_data, id=hotel_id)
         await self.db.commit()
 

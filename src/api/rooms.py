@@ -1,8 +1,13 @@
 from fastapi import APIRouter, Body, HTTPException, status
 
 from src.api.examples.rooms import post_example, put_example
-from src.exceptions import ObjectNotFoundException, HotelNotFoundHttpException, \
-    RoomNotFoundHttpException, HotelNotFoundException, RoomNotFoundException
+from src.exceptions import (
+    ObjectNotFoundException,
+    HotelNotFoundHttpException,
+    RoomNotFoundHttpException,
+    HotelNotFoundException,
+    RoomNotFoundException,
+)
 
 from src.schemas.rooms import RoomAddRequest, RoomPatchRequest
 
@@ -35,11 +40,9 @@ async def get_room_by_id(room_id: int, db: DBDep):
 
 @router.post("/{hotel_id}/rooms")
 async def create_room(
-        hotel_id: int,
-        db: DBDep,
-        room_data: RoomAddRequest = Body(
-            openapi_examples=post_example
-        ),
+    hotel_id: int,
+    db: DBDep,
+    room_data: RoomAddRequest = Body(openapi_examples=post_example),
 ):
     try:
         room = await RoomService(db).create_room(hotel_id, room_data)
@@ -52,12 +55,10 @@ async def create_room(
 
 @router.put("/{hotel_id}/rooms/{room_id}")
 async def change_room_all_values(
-        hotel_id: int,
-        room_id: int,
-        db: DBDep,
-        room_data: RoomAddRequest = Body(
-            openapi_examples=put_example
-        ),
+    hotel_id: int,
+    room_id: int,
+    db: DBDep,
+    room_data: RoomAddRequest = Body(openapi_examples=put_example),
 ):
     try:
         await RoomService(db).edit_room(hotel_id, room_id, room_data)
@@ -74,10 +75,10 @@ async def change_room_all_values(
     "/{hotel_id}/rooms/{room_id}", summary="Частичное обновление даных комнаты"
 )
 async def change_room_value(
-        hotel_id: int,
-        db: DBDep,
-        room_id: int,
-        room_data: RoomPatchRequest,
+    hotel_id: int,
+    db: DBDep,
+    room_id: int,
+    room_data: RoomPatchRequest,
 ):
     try:
         await RoomService(db).partially_edit_room(hotel_id, room_id, room_data)

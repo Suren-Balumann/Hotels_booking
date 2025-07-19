@@ -14,17 +14,14 @@ router = APIRouter(prefix="/hotels", tags=["Отели"])
 @router.get("")
 @cache(expire=10)
 async def get_hotels(
-        pagination: PaginationDep,
-        db: DBDep,
-        dates: DatesDep,
-        title: str | None = Query(None, description="Название Отеля"),
-        location: str | None = Query(None, description="Локация отеля"),
+    pagination: PaginationDep,
+    db: DBDep,
+    dates: DatesDep,
+    title: str | None = Query(None, description="Название Отеля"),
+    location: str | None = Query(None, description="Локация отеля"),
 ):
     return await HotelService(db).get_filtered_by_time(
-        pagination,
-        dates,
-        title,
-        location
+        pagination, dates, title, location
     )
 
 
@@ -40,10 +37,8 @@ async def get_hotel_by_id(hotel_id: int, db: DBDep):
 
 @router.post("")
 async def create_hotel(
-        db: DBDep,
-        hotel_data: HotelAdd = Body(
-            openapi_examples=post_example
-        ),
+    db: DBDep,
+    hotel_data: HotelAdd = Body(openapi_examples=post_example),
 ):
     hotel = await HotelService(db).add_hotel(hotel_data)
     return {"status": "OK", "data": hotel}

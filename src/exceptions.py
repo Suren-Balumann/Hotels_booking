@@ -39,6 +39,7 @@ class IncorrectTokenException(NabronirivalException):
 class ExpiredTokenException(NabronirivalException):
     detail = "Необхадимо авторизоваться"
 
+
 class UserAlreadyExistsException(NabronirivalException):
     detail = "Пользователь уже существует"
 
@@ -49,6 +50,7 @@ class UserDoesNotRegisteredException(NabronirivalException):
 
 class WrongPasswordException(NabronirivalException):
     detail = "Неверный пароль"
+
 
 class NabronirovalHttpException(HTTPException):
     status_code = 500
@@ -77,9 +79,11 @@ class ExpiredTokenHttpException(NabronirovalHttpException):
     status_code = status.HTTP_401_UNAUTHORIZED
     detail = "Необхадимо авторизоваться"
 
+
 class UserAlreadyExistsHttpException(NabronirovalHttpException):
     status_code = status.HTTP_409_CONFLICT
     detail = "Пользователь уже существует"
+
 
 class UserDoesNotRegisteredHttpException(NabronirovalHttpException):
     status_code = status.HTTP_401_UNAUTHORIZED
@@ -89,6 +93,7 @@ class UserDoesNotRegisteredHttpException(NabronirovalHttpException):
 class WrongPasswordHttpException(NabronirovalHttpException):
     status_code = status.HTTP_401_UNAUTHORIZED
     detail = "Неверный пароль"
+
 
 class AllRoomsAreBookedHttpException(NabronirovalHttpException):
     status_code = status.HTTP_409_CONFLICT

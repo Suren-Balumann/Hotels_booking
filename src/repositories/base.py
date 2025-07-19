@@ -64,7 +64,8 @@ class BaseRepository:
                 raise ObjectAlreadyExistsException from ex
             else:
                 logging.error(
-                    f"Незнакомая ошибка: Не удалось добавить данные в БД, входные данные {data},тип ошибки: {type(ex.orig.__cause__)}")
+                    f"Незнакомая ошибка: Не удалось добавить данные в БД, входные данные {data},тип ошибки: {type(ex.orig.__cause__)}"
+                )
                 raise ex
 
         return self.mapper.map_to_domain_entity(model)
@@ -76,7 +77,7 @@ class BaseRepository:
         await self.session.execute(query)
 
     async def edit(
-            self, data: BaseModel, exclude_unset: bool = False, **filter_by
+        self, data: BaseModel, exclude_unset: bool = False, **filter_by
     ) -> None:
         update_stmt = (
             update(self.model)
